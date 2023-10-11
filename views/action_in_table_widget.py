@@ -86,6 +86,8 @@ class ActionInTableWidget(QWidget):
         e.accept()
 
     def dropEvent(self, e):
+        if self._action_widget is not None:
+            return
         e.accept()
         action_widget: ActionWidget = e.source()
         action_widget.hide()
@@ -95,8 +97,6 @@ class ActionInTableWidget(QWidget):
         self._timetable.add_action(action, self._clock, self._executor)
         self.render_action(action)
         self._update_table(self, action)
-
-        self._timetable.print_timetable()
 
     def mousePressEvent(self, e):
         if e.buttons() == Qt.MouseButton.RightButton and self._action_widget is not None:
@@ -108,5 +108,3 @@ class ActionInTableWidget(QWidget):
             self.render_action(None)
 
             self._update_table(self, action)
-
-        self._timetable.print_timetable()

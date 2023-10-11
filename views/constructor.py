@@ -4,9 +4,9 @@ from PyQt6 import uic
 from PyQt6.QtCore import QSize, QPoint, Qt, QModelIndex
 from PyQt6.QtGui import QAction, QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow, QLabel, QPlainTextEdit, QWidget, QTableView, QItemDelegate, QCheckBox, \
-    QTableWidget, QPushButton, QButtonGroup, QRadioButton, QFileDialog
+    QTableWidget, QPushButton, QButtonGroup, QRadioButton, QFileDialog, QSpinBox
 
-from executors import Executor
+from executors import Executor, ExecutorList
 from file_manager import FileManager
 from resources import Resource
 from tasks import Task
@@ -15,6 +15,8 @@ from views.action_dialog import ActionDialog
 
 
 class ConstructorWindow(QMainWindow):
+    executorsSpinBox: QSpinBox
+
     def __init__(self, task: Optional[Task] = None, src: str = '', size: Optional[QSize] = None,
                  pos: Optional[QPoint] = None):
         super().__init__()
@@ -22,6 +24,8 @@ class ConstructorWindow(QMainWindow):
 
         self._open_menu = True
         self._src = src
+
+        self._saved_executors = None
 
         # Устанавливаем менюбар
         self._set_menubar()
@@ -54,6 +58,8 @@ class ConstructorWindow(QMainWindow):
         # Реализуем работу действий
         self.findChild(QPushButton, 'addActionBtn').clicked.connect(self.add_action)
 
+        self.executorsSpinBox.textChanged.connect(self.executor_count_changed)
+
         # Изменяем размер окна
         if size:
             self.resize(size)
@@ -65,6 +71,8 @@ class ConstructorWindow(QMainWindow):
         execute_mode.triggered.connect(self.enter_execute_mode)
         self.findChild(QAction, 'saveAction').triggered.connect(self.save)
         self.findChild(QAction, 'saveAsAction').triggered.connect(self.save_as)
+        self.findChild(QAction, 'createAction').triggered.connect(self.create_action)
+        self.findChild(QAction, 'openAction').triggered.connect(self.open)
 
     def enter_execute_mode(self):
         from views.task import TaskWindow
@@ -91,6 +99,18 @@ class ConstructorWindow(QMainWindow):
         universal.setEnabled(not use_specific)
         specific.setEnabled(use_specific)
         specific_table.setEnabled(use_specific)
+
+        if use_specific:
+            if self._saved_executors is not None:
+                self._task.executor_list = self._saved_executors
+        else:
+            self._saved_executors = self._task.executor_list
+            self._universal_executer = Executor('Исполнитель')
+            self._task.executor_list = ExecutorList()
+            self._task.executor_list.set_count(self._universal_executer, self.executorsSpinBox.value())
+
+    def executor_count_changed(self):
+        self._task.executor_list.set_count(self._universal_executer, self.executorsSpinBox.value())
 
     def set_task(self):
         task = self._task
@@ -165,7 +185,7 @@ class ConstructorWindow(QMainWindow):
             widget: QWidget = layout.takeAt(i).widget()
             widget.deleteLater()
         for action in task.action_list:
-            action_widget = ActionWidget(action, task.settings, True, self._task)
+            action_widget = ActionWidget(action, task.settings, True, self._task, self.set_task)
             layout.addWidget(action_widget)
 
     def add_resources_row(self):
@@ -247,14 +267,31 @@ class ConstructorWindow(QMainWindow):
     def add_action(self):
         add_action_dialog = ActionDialog(self._task)
         add_action_dialog.exec()
+        self.set_task()
+
+    def create_action(self):
+        self._src = ''
+        self._task = Task()
+        self.set_task()
 
     def save(self):
-        pass
+        if self._src != '':
+            FileManager.save(self._task, self._src)
+        else:
+            self.save_as()
 
     def save_as(self):
         src, _ = QFileDialog.getSaveFileName()
         FileManager.save(self._task, src)
         self._src = src
+
+    def open(self):
+        src, _ = QFileDialog.getOpenFileName()
+        task = FileManager.load(src)
+        self._src = src
+        self._task = task
+        self._saved_executors = task.executor_list
+        self.set_task()
 
     def closeEvent(self, e):
         from views.menu import MenuWindow

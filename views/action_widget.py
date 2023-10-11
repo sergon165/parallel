@@ -12,7 +12,8 @@ from views.action_dialog import ActionDialog
 
 
 class ActionWidget(QWidget):
-    def __init__(self, action: Action, settings: Settings, show_buttons: bool = False, task: Optional[Task] = None):
+    def __init__(self, action: Action, settings: Settings, show_buttons: bool = False, task: Optional[Task] = None,
+                 set_task=None):
         super().__init__()
         uic.loadUi('views/ui/action.ui', self)
 
@@ -30,6 +31,10 @@ class ActionWidget(QWidget):
         else:
             self.editBtn: QPushButton
             self.editBtn.clicked.connect(self.edit)
+            self.deleteBtn: QPushButton
+            self.deleteBtn.clicked.connect(self.remove)
+
+        # print(action.previous_action_list)
 
     def render_action(self):
         action = self.action
@@ -40,17 +45,17 @@ class ActionWidget(QWidget):
 
         executor_label: QLabel = self.findChild(QLabel, 'executorLabel')
         if settings.specific_executors_enabled:
+            executor_label.show()
             executor_label.setText(str(action.executor_list))
         else:
             executor_label.hide()
-            executor_label.deleteLater()
 
         after_label: QLabel = self.findChild(QLabel, 'afterLabel')
         if len(action.previous_action_list) > 0:
+            after_label.show()
             after_label.setText('После: ' + str(action.previous_action_list))
         else:
             after_label.hide()
-            after_label.deleteLater()
 
         resources_label: QLabel = self.findChild(QLabel, 'resourcesLabel')
         if settings.resources_enabled:
@@ -62,13 +67,20 @@ class ActionWidget(QWidget):
             if len(action.result_resource_list) > 0:
                 res += ' -> ' + str(action.result_resource_list)
             resources_label.setText(res)
+            resources_label.show()
         else:
             resources_label.hide()
-            resources_label.deleteLater()
+
+        # print(action.previous_action_list)
 
     def edit(self):
         action_dialog = ActionDialog(self._task, self.action)
         action_dialog.exec()
+        self.render_action()
+
+    def remove(self):
+        self._task.action_list.remove(self.action)
+        self.deleteLater()
 
     def mouseMoveEvent(self, e):
         if e.buttons() == Qt.MouseButton.LeftButton:

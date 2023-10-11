@@ -89,7 +89,7 @@
             <x>0</x>
             <y>0</y>
             <width>326</width>
-            <height>499</height>
+            <height>501</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -307,7 +307,7 @@
                <x>0</x>
                <y>0</y>
                <width>650</width>
-               <height>399</height>
+               <height>401</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -434,17 +434,15 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
     <property name="title">
      <string>Файл</string>
     </property>
-    <addaction name="createBtn"/>
-    <addaction name="openBtn"/>
-    <addaction name="separator"/>
-    <addaction name="closeBtn"/>
+    <addaction name="createAction"/>
+    <addaction name="openAction"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -455,12 +453,12 @@
    <addaction name="menu"/>
    <addaction name="menu_2"/>
   </widget>
-  <action name="createBtn">
+  <action name="createAction">
    <property name="text">
     <string>Создать</string>
    </property>
   </action>
-  <action name="openBtn">
+  <action name="openAction">
    <property name="text">
     <string>Открыть...</string>
    </property>

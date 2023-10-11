@@ -4,9 +4,10 @@ from PyQt6 import uic
 from PyQt6.QtCore import Qt, QSize, QPoint
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMainWindow, QWidget, QLabel, QVBoxLayout, QSpacerItem, QSizePolicy, QGridLayout, \
-    QPushButton, QMessageBox
+    QPushButton, QMessageBox, QFileDialog
 
 from actions import Action
+from file_manager import FileManager
 from tasks import Task
 from timetable import Timetable
 from views.action_in_table_widget import ActionInTableWidget
@@ -32,6 +33,9 @@ class TaskWindow(QMainWindow):
         self.add_clock()
 
         self.findChild(QPushButton, 'checkBtn').clicked.connect(self.check)
+
+        self.findChild(QAction, 'openAction').triggered.connect(self.open)
+        self.findChild(QAction, 'createAction').triggered.connect(self.create_action)
 
         if size:
             self.resize(size)
@@ -153,6 +157,20 @@ class TaskWindow(QMainWindow):
                 text += f'- {mistake}\n'
             dlg.setText(text)
         dlg.exec()
+
+    def create_action(self):
+        from views.constructor import ConstructorWindow
+        self.constructor_window = ConstructorWindow()
+        self.close()
+        self.constructor_window.show()
+
+    def open(self):
+        src, _ = QFileDialog.getOpenFileName()
+        task = FileManager.load(src)
+        self._src = src
+        # self._task = task
+
+        self.set_task(task)
 
     def closeEvent(self, e):
         from views.menu import MenuWindow
