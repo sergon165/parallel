@@ -46,7 +46,8 @@ class ActionDialog(QDialog):
 
         # Устанавливаем список исполнителей
         for executor, _ in task.executor_list:
-            self.executorsComboBox.addItem(str(executor), executor)
+            if executor not in self._action.executor_list:
+                self.executorsComboBox.addItem(str(executor), executor)
 
         executors_model = QStandardItemModel()
         self.executorsListView.setModel(executors_model)
@@ -100,7 +101,8 @@ class ActionDialog(QDialog):
 
         # Устанавливаем список ограничений
         for a in task.action_list:
-            self.afterComboBox.addItem(str(a), a)
+            if a not in self._action.previous_action_list and a != self._action:
+                self.afterComboBox.addItem(str(a), a)
 
         after_model = QStandardItemModel()
         self.afterListView.setModel(after_model)
@@ -126,6 +128,10 @@ class ActionDialog(QDialog):
 
     def add_executor(self):
         executor = self.executorsComboBox.currentData(Qt.ItemDataRole.UserRole)
+        if executor is None:
+            return
+
+        self.executorsComboBox.removeItem(self.executorsComboBox.currentIndex())
         self._action.executor_list.add(executor)
 
         item = QStandardItem(str(executor))
@@ -145,9 +151,14 @@ class ActionDialog(QDialog):
             ex = model.data(model.index(row, 0), Qt.ItemDataRole.UserRole)
             self._action.executor_list.remove(ex)
             self.executorsListView.model().removeRow(row)
+            self.executorsComboBox.addItem(str(ex), ex)
 
     def add_after(self):
         action = self.afterComboBox.currentData(Qt.ItemDataRole.UserRole)
+        if action is None:
+            return
+
+        self.afterComboBox.removeItem(self.afterComboBox.currentIndex())
         self._action.previous_action_list.append(action)
 
         item = QStandardItem(str(action))
@@ -167,12 +178,23 @@ class ActionDialog(QDialog):
             action = model.data(model.index(row, 0), Qt.ItemDataRole.UserRole)
             self._action.previous_action_list.remove(action)
             self.afterListView.model().removeRow(row)
+            self.afterComboBox.addItem(str(action), action)
 
     def add_used_resources_row(self):
-        resources_model = self.usedResourcesTableView.model()
-        row = resources_model.rowCount()
-
         resource = self.resourcesComboBox.currentData(Qt.ItemDataRole.UserRole)
+        if resource is None:
+            return
+
+        resources_model = self.usedResourcesTableView.model()
+        index = self._action.required_resource_list.get_index(resource)
+
+        if index is not None:
+            self._action.required_resource_list.add(resource, 1)
+            count = self._action.required_resource_list[resource]
+            resources_model.setData(resources_model.index(index, 1), count)
+            return
+
+        row = resources_model.rowCount()
 
         self._action.required_resource_list.add(resource, 1)
 
@@ -205,10 +227,20 @@ class ActionDialog(QDialog):
                     self._action.required_resource_list.set_count(r, value)
 
     def add_new_resources_row(self):
-        resources_model = self.newResourcesTableView.model()
-        row = resources_model.rowCount()
-
         resource = self.resourcesComboBox.currentData(Qt.ItemDataRole.UserRole)
+        if resource is None:
+            return
+
+        resources_model = self.newResourcesTableView.model()
+        index = self._action.result_resource_list.get_index(resource)
+
+        if index is not None:
+            self._action.result_resource_list.add(resource, 1)
+            count = self._action.result_resource_list[resource]
+            resources_model.setData(resources_model.index(index, 1), count)
+            return
+
+        row = resources_model.rowCount()
 
         self._action.result_resource_list.add(resource, 1)
 

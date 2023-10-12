@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 class Resource:
@@ -89,3 +89,8 @@ class ResourceList:
     def get_by_index(self, index: int):
         items = list(self._resource_list.items())
         return items[index]
+
+    def get_index(self, resource: Resource) -> Optional[int]:
+        if resource in self._resource_list:
+            return list(self._resource_list.keys()).index(resource)
+        return None
