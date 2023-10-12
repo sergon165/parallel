@@ -35,7 +35,6 @@ class TaskWindow(QMainWindow):
 
         self.findChild(QPushButton, 'checkBtn').clicked.connect(self.check)
 
-        self.findChild(QAction, 'openAction').triggered.connect(self.open)
         self.findChild(QAction, 'createAction').triggered.connect(self.create_action)
 
         if size:
@@ -172,14 +171,6 @@ class TaskWindow(QMainWindow):
         self.constructor_window = ConstructorWindow()
         self.close()
         self.constructor_window.show()
-
-    def open(self):
-        src, _ = QFileDialog.getOpenFileName()
-        if src != '':
-            task = FileManager.load(src)
-            self._src = src
-            self.set_title()
-            self.set_task(task)
 
     def closeEvent(self, e):
         from views.menu import MenuWindow

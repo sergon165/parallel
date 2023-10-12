@@ -352,14 +352,20 @@ class ConstructorWindow(QMainWindow):
 
     def open(self):
         src, _ = QFileDialog.getOpenFileName()
-        if src != '':
-            task = FileManager.load(src)
-            self._src = src
-            self._task = task
-            self._saved_executors = task.executor_list
-            self.set_title()
-            self.set_task()
-            self.set_changed(False)
+        if src == '':
+            return
+        task = FileManager.load(src)
+        if task is None:
+            dlg = QMessageBox()
+            dlg.setText('Ошибка чтения файла')
+            dlg.exec()
+            return
+        self._src = src
+        self._task = task
+        self._saved_executors = task.executor_list
+        self.set_title()
+        self.set_task()
+        self.set_changed(False)
 
     def closeEvent(self, e):
         from views.menu import MenuWindow

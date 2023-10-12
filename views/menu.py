@@ -22,11 +22,17 @@ class MenuWindow(QMainWindow):
 
     def open(self):
         src, _ = QFileDialog.getOpenFileName()
-        if src != '':
-            task = FileManager.load(src)
-            self.task_window = TaskWindow(task, src)
-            self.close()
-            self.task_window.show()
+        if src == '':
+            return
+        task = FileManager.load(src)
+        if task is None:
+            dlg = QMessageBox()
+            dlg.setText('Ошибка чтения файла')
+            dlg.exec()
+            return
+        self.task_window = TaskWindow(task, src)
+        self.close()
+        self.task_window.show()
 
     def about(self):
         dlg = QMessageBox()

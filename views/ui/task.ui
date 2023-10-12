@@ -442,7 +442,6 @@
      <string>Файл</string>
     </property>
     <addaction name="createAction"/>
-    <addaction name="openAction"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
