@@ -16,6 +16,7 @@ from views.action_dialog import ActionDialog
 
 class ConstructorWindow(QMainWindow):
     executorsSpinBox: QSpinBox
+    descriptionTextEdit: QPlainTextEdit
 
     def __init__(self, task: Optional[Task] = None, src: str = '', size: Optional[QSize] = None,
                  pos: Optional[QPoint] = None):
@@ -60,6 +61,7 @@ class ConstructorWindow(QMainWindow):
         # Реализуем работу действий
         self.findChild(QPushButton, 'addActionBtn').clicked.connect(self.add_action)
 
+        self.descriptionTextEdit.textChanged.connect(self.description_changed)
         self.executorsSpinBox.textChanged.connect(self.executor_count_changed)
 
         # Изменяем размер окна
@@ -88,6 +90,9 @@ class ConstructorWindow(QMainWindow):
         self._task_window = TaskWindow(self._task, self._src, self.size(), self.pos())
         self.close()
         self._task_window.show()
+
+    def description_changed(self):
+        self._task.set_description(self.descriptionTextEdit.toPlainText())
 
     def use_resources_changed(self):
         use_resources: QCheckBox = self.findChild(QCheckBox, 'useResourcesCheckBox')
