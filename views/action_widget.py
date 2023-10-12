@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QMimeData
@@ -12,13 +12,15 @@ from views.action_dialog import ActionDialog
 
 
 class ActionWidget(QWidget):
-    def __init__(self, action: Action, settings: Settings, show_buttons: bool = False, task: Optional[Task] = None,
+    def __init__(self, action: Action, settings: Settings, set_changed: Optional[Callable[[], None]] = None,
+                 show_buttons: bool = False, task: Optional[Task] = None,
                  set_task=None):
         super().__init__()
         uic.loadUi('views/ui/action.ui', self)
 
         self.action = action
         self._settings = settings
+        self._set_changed = set_changed
         self._task = task
         self.render_action()
 
@@ -74,11 +76,12 @@ class ActionWidget(QWidget):
         # print(action.previous_action_list)
 
     def edit(self):
-        action_dialog = ActionDialog(self._task, self.action)
+        action_dialog = ActionDialog(self._task, self._set_changed, self.action)
         action_dialog.exec()
         self.render_action()
 
     def remove(self):
+        self._set_changed()
         self._task.action_list.remove(self.action)
         self.deleteLater()
 

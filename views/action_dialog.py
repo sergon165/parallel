@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QModelIndex
@@ -24,11 +24,12 @@ class ActionDialog(QDialog):
     usedResourcesTableView: QTableView
     newResourcesTableView: QTableView
 
-    def __init__(self, task: Task, action: Optional[Action] = None):
+    def __init__(self, task: Task, set_changed: Callable[[], None], action: Optional[Action] = None):
         super().__init__()
         uic.loadUi('views/ui/addAction.ui', self)
 
         self._task = task
+        self._set_changed = set_changed
         self._new = False
 
         if action is None:
@@ -122,13 +123,16 @@ class ActionDialog(QDialog):
         self.deleteAfterBtn.clicked.connect(self.remove_after)
 
     def change_name(self):
+        self._set_changed()
         self._action.set_name(self.nameLineEdit.text())
 
     def change_duration(self):
+        self._set_changed()
         self.durationSpinBox: QSpinBox
         self._action.set_duration(self.durationSpinBox.value())
 
     def add_executor(self):
+        self._set_changed()
         executor = self.executorsComboBox.currentData(Qt.ItemDataRole.UserRole)
         if executor is None:
             return
@@ -141,6 +145,7 @@ class ActionDialog(QDialog):
         self.executorsListView.model().appendRow(item)
 
     def remove_executor(self):
+        self._set_changed()
         selected_indexes = self.executorsListView.selectedIndexes()
         model = self.executorsListView.model()
         if len(selected_indexes) == 0:
@@ -156,6 +161,7 @@ class ActionDialog(QDialog):
             self.executorsComboBox.addItem(str(ex), ex)
 
     def add_after(self):
+        self._set_changed()
         action = self.afterComboBox.currentData(Qt.ItemDataRole.UserRole)
         if action is None:
             return
@@ -168,6 +174,7 @@ class ActionDialog(QDialog):
         self.afterListView.model().appendRow(item)
 
     def remove_after(self):
+        self._set_changed()
         selected_indexes = self.afterListView.selectedIndexes()
         model = self.afterListView.model()
         if len(selected_indexes) == 0:
@@ -183,6 +190,7 @@ class ActionDialog(QDialog):
             self.afterComboBox.addItem(str(action), action)
 
     def add_used_resources_row(self):
+        self._set_changed()
         resource = self.resourcesComboBox.currentData(Qt.ItemDataRole.UserRole)
         if resource is None:
             return
@@ -205,6 +213,7 @@ class ActionDialog(QDialog):
         resources_model.setData(resources_model.index(row, 1), 1)
 
     def remove_used_resources_rows(self):
+        self._set_changed()
         selected_indexes = self.usedResourcesTableView.selectedIndexes()
         if len(selected_indexes) == 0:
             return
@@ -217,6 +226,7 @@ class ActionDialog(QDialog):
             self.usedResourcesTableView.model().removeRow(row)
 
     def used_resources_table_changed(self, start: QModelIndex, end: QModelIndex):
+        self._set_changed()
         for row in range(start.row(), end.row() + 1):
             r, count = self._action.required_resource_list.get_by_index(row)
             r: Resource
@@ -229,6 +239,7 @@ class ActionDialog(QDialog):
                     self._action.required_resource_list.set_count(r, value)
 
     def add_new_resources_row(self):
+        self._set_changed()
         resource = self.resourcesComboBox.currentData(Qt.ItemDataRole.UserRole)
         if resource is None:
             return
@@ -251,6 +262,7 @@ class ActionDialog(QDialog):
         resources_model.setData(resources_model.index(row, 1), 1)
 
     def remove_new_resources_rows(self):
+        self._set_changed()
         selected_indexes = self.newResourcesTableView.selectedIndexes()
         if len(selected_indexes) == 0:
             return
@@ -263,6 +275,7 @@ class ActionDialog(QDialog):
             self.newResourcesTableView.model().removeRow(row)
 
     def new_resources_table_changed(self, start: QModelIndex, end: QModelIndex):
+        self._set_changed()
         for row in range(start.row(), end.row() + 1):
             r, count = self._action.result_resource_list.get_by_index(row)
             r: Resource

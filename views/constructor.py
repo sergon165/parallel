@@ -4,7 +4,7 @@ from PyQt6 import uic
 from PyQt6.QtCore import QSize, QPoint, Qt, QModelIndex
 from PyQt6.QtGui import QAction, QStandardItemModel, QStandardItem
 from PyQt6.QtWidgets import QMainWindow, QLabel, QPlainTextEdit, QWidget, QTableView, QItemDelegate, QCheckBox, \
-    QTableWidget, QPushButton, QButtonGroup, QRadioButton, QFileDialog, QSpinBox
+    QTableWidget, QPushButton, QButtonGroup, QRadioButton, QFileDialog, QSpinBox, QMessageBox
 
 from executors import Executor, ExecutorList
 from file_manager import FileManager
@@ -24,6 +24,7 @@ class ConstructorWindow(QMainWindow):
         uic.loadUi('views/ui/constructor.ui', self)
 
         self._open_menu = True
+        self._changed = False
         self._src = src
         self._default_title = self.windowTitle()
         self.set_title()
@@ -36,13 +37,16 @@ class ConstructorWindow(QMainWindow):
         # Устанавливаем значение task
         if task is not None:
             self._task = task
+            new = False
         else:
             self._task = Task()
+            new = True
 
         # Устанавливаем данные
         self._executors_table: QTableView = self.findChild(QTableView, 'executorsTable')
         self._resources_table: QTableView = self.findChild(QTableView, 'resourcesTable')
         self.set_task()
+        self.set_changed(new)
 
         # Реализуем работу вкладки ресурсов
         self.findChild(QPushButton, 'addResourceBtn').clicked.connect(self.add_resources_row)
@@ -71,10 +75,13 @@ class ConstructorWindow(QMainWindow):
             self.move(pos)
 
     def set_title(self):
+        title = ''
+        if self._changed:
+            title += '* '
+        title += self._default_title
         if self._src != '':
-            self.setWindowTitle(self._default_title + ' - ' + self._src)
-        else:
-            self.setWindowTitle(self._default_title)
+            title += ' - ' + self._src
+        self.setWindowTitle(title)
 
     def _set_menubar(self):
         execute_mode: QAction = self.findChild(QAction, 'executeModeAction')
@@ -84,8 +91,30 @@ class ConstructorWindow(QMainWindow):
         self.findChild(QAction, 'createAction').triggered.connect(self.create_action)
         self.findChild(QAction, 'openAction').triggered.connect(self.open)
 
+    def set_changed(self, value: bool = True):
+        if value != self._changed:
+            if value:
+                self.setWindowTitle('* ' + self.windowTitle())
+            else:
+                self.setWindowTitle(self.windowTitle()[2:])
+            self._changed = value
+
     def enter_execute_mode(self):
         from views.task import TaskWindow
+
+        if self._changed:
+            dlg = QMessageBox()
+            dlg.setWindowTitle('Файл не сохранен')
+            dlg.setText('Для перехода в режим выполнения файл необходимо сохранить. Сохранить файл?')
+            dlg.setStandardButtons(QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Cancel)
+            res = dlg.exec()
+            if res == QMessageBox.StandardButton.Save:
+                saved = self.save()
+                if not saved:
+                    return
+            else:
+                return
+
         self._open_menu = False
         self._task_window = TaskWindow(self._task, self._src, self.size(), self.pos())
         self.close()
@@ -93,6 +122,7 @@ class ConstructorWindow(QMainWindow):
 
     def description_changed(self):
         self._task.set_description(self.descriptionTextEdit.toPlainText())
+        self.set_changed()
 
     def use_resources_changed(self):
         use_resources: QCheckBox = self.findChild(QCheckBox, 'useResourcesCheckBox')
@@ -102,8 +132,10 @@ class ConstructorWindow(QMainWindow):
         self._task.settings.resources_enabled = state
         resources_widget.setEnabled(state)
         resources_table.setEnabled(state)
+        self.set_changed()
 
     def executor_button_clicked(self, button: QRadioButton):
+        self.set_changed()
         universal: QWidget = self.findChild(QWidget, 'universalContentWidget')
         specific: QWidget = self.findChild(QWidget, 'executorsTableWidget')
         specific_table: QTableView = self.findChild(QTableView, 'executorsTable')
@@ -123,6 +155,7 @@ class ConstructorWindow(QMainWindow):
             self._task.executor_list.set_count(self._universal_executer, self.executorsSpinBox.value())
 
     def executor_count_changed(self):
+        self.set_changed()
         self._task.executor_list.set_count(self._universal_executer, self.executorsSpinBox.value())
 
     def set_task(self):
@@ -201,10 +234,11 @@ class ConstructorWindow(QMainWindow):
             widget: QWidget = layout.takeAt(i).widget()
             widget.deleteLater()
         for action in task.action_list:
-            action_widget = ActionWidget(action, task.settings, True, self._task, self.set_task)
+            action_widget = ActionWidget(action, task.settings, self.set_changed, True, self._task, self.set_task)
             layout.addWidget(action_widget)
 
     def add_resources_row(self):
+        self.set_changed()
         resources_model = self._resources_table.model()
         row = resources_model.rowCount()
         name = f'Ресурс{row + 1}'
@@ -219,6 +253,7 @@ class ConstructorWindow(QMainWindow):
         resources_model.setData(resources_model.index(row, 2), 0)
 
     def remove_resources_rows(self):
+        self.set_changed()
         selected_indexes = self._resources_table.selectedIndexes()
         if len(selected_indexes) == 0:
             return
@@ -231,6 +266,7 @@ class ConstructorWindow(QMainWindow):
             self._resources_table.model().removeRow(row)
 
     def resources_table_changed(self, start: QModelIndex, end: QModelIndex):
+        self.set_changed()
         for row in range(start.row(), end.row() + 1):
             r, count = self._task.resource_list.get_by_index(row)
             r: Resource
@@ -245,6 +281,7 @@ class ConstructorWindow(QMainWindow):
                     self._task.resource_list.set_count(r, value)
 
     def add_executors_row(self):
+        self.set_changed()
         executors_model = self._executors_table.model()
         row = executors_model.rowCount()
         name = f'Исполнитель{row + 1}'
@@ -257,6 +294,7 @@ class ConstructorWindow(QMainWindow):
         executors_model.setData(executors_model.index(row, 1), 1)
 
     def remove_executors_rows(self):
+        self.set_changed()
         selected_indexes = self._executors_table.selectedIndexes()
         if len(selected_indexes) == 0:
             return
@@ -269,6 +307,7 @@ class ConstructorWindow(QMainWindow):
             self._executors_table.model().removeRow(row)
 
     def executor_table_changed(self, start, end):
+        self.set_changed()
         for row in range(start.row(), end.row() + 1):
             ex, count = self._task.executor_list.get_by_index(row)
             ex: Executor
@@ -281,28 +320,35 @@ class ConstructorWindow(QMainWindow):
                     self._task.executor_list.set_count(ex, value)
 
     def add_action(self):
-        add_action_dialog = ActionDialog(self._task)
+        self.set_changed()
+        add_action_dialog = ActionDialog(self._task, self.set_changed)
         add_action_dialog.exec()
         self.set_task()
 
     def create_action(self):
+        self.set_changed()
         self._src = ''
         self.set_title()
         self._task = Task()
         self.set_task()
 
-    def save(self):
+    def save(self) -> bool:
         if self._src != '':
             FileManager.save(self._task, self._src)
+            self.set_changed(False)
+            return True
         else:
-            self.save_as()
+            return self.save_as()
 
-    def save_as(self):
+    def save_as(self) -> bool:
         src, _ = QFileDialog.getSaveFileName()
         if src != '':
             FileManager.save(self._task, src)
             self._src = src
             self.set_title()
+            self.set_changed(False)
+            return True
+        return False
 
     def open(self):
         src, _ = QFileDialog.getOpenFileName()
@@ -313,6 +359,7 @@ class ConstructorWindow(QMainWindow):
             self._saved_executors = task.executor_list
             self.set_title()
             self.set_task()
+            self.set_changed(False)
 
     def closeEvent(self, e):
         from views.menu import MenuWindow
