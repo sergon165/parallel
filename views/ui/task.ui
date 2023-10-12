@@ -89,7 +89,7 @@
             <x>0</x>
             <y>0</y>
             <width>326</width>
-            <height>501</height>
+            <height>499</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -307,7 +307,7 @@
                <x>0</x>
                <y>0</y>
                <width>650</width>
-               <height>401</height>
+               <height>399</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -434,7 +434,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -457,10 +457,16 @@
    <property name="text">
     <string>Создать</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="openAction">
    <property name="text">
     <string>Открыть...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="closeBtn">
@@ -471,6 +477,9 @@
   <action name="constructorModeAction">
    <property name="text">
     <string>Перейти в режим конструктора</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
    </property>
   </action>
  </widget>
