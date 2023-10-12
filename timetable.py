@@ -86,8 +86,9 @@ class Timetable:
                     # Если действие только началось
                     if remains[action] == action.get_duration():
                         # Проверяем исполнителя
-                        if self.get_executor(j + 1) not in action.executor_list:
-                            mistakes.append(f'У действия "{action}" неверно задан исполнитель')
+                        if self._task.settings.specific_executors_enabled:
+                            if self.get_executor(j + 1) not in action.executor_list:
+                                mistakes.append(f'У действия "{action}" неверно задан исполнитель')
 
                         # Проверяем выполнение предыдущих заданий
                         for prev in action.previous_action_list:
