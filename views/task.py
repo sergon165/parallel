@@ -26,7 +26,8 @@ class TaskWindow(QMainWindow):
         self._timetable = Timetable(task)
 
         self._src = src
-        self.setWindowTitle(self.windowTitle() + f' - {src}')
+        self._default_title = self.windowTitle()
+        self.set_title()
 
         self.set_menubar()
         self.set_task(task)
@@ -41,6 +42,12 @@ class TaskWindow(QMainWindow):
             self.resize(size)
         if pos:
             self.move(pos)
+
+    def set_title(self):
+        if self._src != '':
+            self.setWindowTitle(self._default_title + ' - ' + self._src)
+        else:
+            self.setWindowTitle(self._default_title)
 
     def set_menubar(self):
         constructor_mode: QAction = self.findChild(QAction, 'constructorModeAction')
@@ -166,11 +173,11 @@ class TaskWindow(QMainWindow):
 
     def open(self):
         src, _ = QFileDialog.getOpenFileName()
-        task = FileManager.load(src)
-        self._src = src
-        # self._task = task
-
-        self.set_task(task)
+        if src != '':
+            task = FileManager.load(src)
+            self._src = src
+            self.set_title()
+            self.set_task(task)
 
     def closeEvent(self, e):
         from views.menu import MenuWindow

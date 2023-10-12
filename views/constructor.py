@@ -24,6 +24,8 @@ class ConstructorWindow(QMainWindow):
 
         self._open_menu = True
         self._src = src
+        self._default_title = self.windowTitle()
+        self.set_title()
 
         self._saved_executors = None
 
@@ -65,6 +67,12 @@ class ConstructorWindow(QMainWindow):
             self.resize(size)
         if pos:
             self.move(pos)
+
+    def set_title(self):
+        if self._src != '':
+            self.setWindowTitle(self._default_title + ' - ' + self._src)
+        else:
+            self.setWindowTitle(self._default_title)
 
     def _set_menubar(self):
         execute_mode: QAction = self.findChild(QAction, 'executeModeAction')
@@ -166,17 +174,18 @@ class ConstructorWindow(QMainWindow):
         executors_model.setHorizontalHeaderLabels(['Название', 'Количество'])
         self._executors_table.setModel(executors_model)
 
-        row = 0
-        for (executor, count) in self._task.executor_list:
-            ex = QStandardItem()
-            ex.setData(executor.get_name(), Qt.ItemDataRole.DisplayRole)
-            executors_model.setItem(row, 0, ex)
+        if self._task.settings.specific_executors_enabled:
+            row = 0
+            for (executor, count) in self._task.executor_list:
+                ex = QStandardItem()
+                ex.setData(executor.get_name(), Qt.ItemDataRole.DisplayRole)
+                executors_model.setItem(row, 0, ex)
 
-            c = QStandardItem()
-            c.setData(count, Qt.ItemDataRole.DisplayRole)
-            executors_model.setItem(row, 1, c)
+                c = QStandardItem()
+                c.setData(count, Qt.ItemDataRole.DisplayRole)
+                executors_model.setItem(row, 1, c)
 
-            row += 1
+                row += 1
 
         # Устанавливаем список действий
         action_container: QWidget = self.findChild(QWidget, 'actionScrollAreaWidgetContents')
@@ -271,6 +280,7 @@ class ConstructorWindow(QMainWindow):
 
     def create_action(self):
         self._src = ''
+        self.set_title()
         self._task = Task()
         self.set_task()
 
@@ -284,14 +294,17 @@ class ConstructorWindow(QMainWindow):
         src, _ = QFileDialog.getSaveFileName()
         FileManager.save(self._task, src)
         self._src = src
+        self.set_title()
 
     def open(self):
         src, _ = QFileDialog.getOpenFileName()
-        task = FileManager.load(src)
-        self._src = src
-        self._task = task
-        self._saved_executors = task.executor_list
-        self.set_task()
+        if src != '':
+            task = FileManager.load(src)
+            self._src = src
+            self._task = task
+            self._saved_executors = task.executor_list
+            self.set_title()
+            self.set_task()
 
     def closeEvent(self, e):
         from views.menu import MenuWindow
