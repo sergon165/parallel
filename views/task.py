@@ -61,6 +61,8 @@ class TaskWindow(QMainWindow):
         self._constructor_window.show()
 
     def set_task(self, task: Task):
+        self._task = task
+
         # Устанавливаем описание задания
         self.findChild(QLabel, 'taskDescLabel').setText(task.get_description())
 

@@ -197,7 +197,7 @@ class ConstructorWindow(QMainWindow):
         # Устанавливаем список действий
         action_container: QWidget = self.findChild(QWidget, 'actionScrollAreaWidgetContents')
         layout = action_container.layout()
-        for i in range(layout.count()):
+        for i in reversed(range(layout.count())):
             widget: QWidget = layout.takeAt(i).widget()
             widget.deleteLater()
         for action in task.action_list:
@@ -299,9 +299,10 @@ class ConstructorWindow(QMainWindow):
 
     def save_as(self):
         src, _ = QFileDialog.getSaveFileName()
-        FileManager.save(self._task, src)
-        self._src = src
-        self.set_title()
+        if src != '':
+            FileManager.save(self._task, src)
+            self._src = src
+            self.set_title()
 
     def open(self):
         src, _ = QFileDialog.getOpenFileName()
