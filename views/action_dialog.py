@@ -3,7 +3,8 @@ from typing import Optional
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QModelIndex
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtWidgets import QWidget, QDialog, QComboBox, QLineEdit, QSpinBox, QListView, QTableView, QPushButton
+from PyQt6.QtWidgets import QWidget, QDialog, QComboBox, QLineEdit, QSpinBox, QListView, QTableView, QPushButton, \
+    QMessageBox
 
 from actions import Action
 from resources import Resource
@@ -11,6 +12,8 @@ from tasks import Task
 
 
 class ActionDialog(QDialog):
+    nameLineEdit: QLineEdit
+
     executorsComboBox: QComboBox
     afterComboBox: QComboBox
     resourcesComboBox: QComboBox
@@ -119,7 +122,6 @@ class ActionDialog(QDialog):
         self.deleteAfterBtn.clicked.connect(self.remove_after)
 
     def change_name(self):
-        self.nameLineEdit: QLineEdit
         self._action.set_name(self.nameLineEdit.text())
 
     def change_duration(self):
@@ -273,6 +275,12 @@ class ActionDialog(QDialog):
                     self._action.result_resource_list.set_count(r, value)
 
     def done_action(self):
+        if self.nameLineEdit.text() == '':
+            dlg = QMessageBox()
+            dlg.setText('Имя не может быть пустым!')
+            dlg.exec()
+            return
+
         if self._new:
             self._task.action_list.append(self._action)
         self.close()
