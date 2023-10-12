@@ -163,6 +163,8 @@ class ConstructorWindow(QMainWindow):
             row += 1
 
         # Устанавливаем список исполнителей
+        if not self._task.settings.resources_enabled:
+            self.executorsSpinBox.setValue(self._task.executor_list.get_total_count())
         # - Устанавливаем значение радиокнопки
         universal_radio_button: QRadioButton = self.findChild(QRadioButton, 'universalRadioBtn')
         specific_radio_button: QRadioButton = self.findChild(QRadioButton, 'specificRadioBtn')

@@ -67,6 +67,12 @@ class ExecutorList:
         keys = list(self._executor_list.keys())
         self._executor_list.pop(keys[index])
 
+    def get_total_count(self):
+        total_count = 0
+        for _, count in self._executor_list.items():
+            total_count += count
+        return total_count
+
     def get_all(self) -> Dict[Executor, int]:
         return self._executor_list
 
